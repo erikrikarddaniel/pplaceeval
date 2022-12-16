@@ -1,12 +1,10 @@
 #!/usr/bin/env nextflow
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    nf-core/pplaceeval
+    pplaceeval
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    Github : https://github.com/nf-core/pplaceeval
+    Github : https://github.com/erikrikarddaniel/pplaceeval
 
-    Website: https://nf-co.re/pplaceeval
-    Slack  : https://nfcore.slack.com/channels/pplaceeval
 ----------------------------------------------------------------------------------------
 */
 
@@ -39,7 +37,7 @@ include { PPLACEEVAL } from './workflows/pplaceeval'
 //
 // WORKFLOW: Run main nf-core/pplaceeval analysis pipeline
 //
-workflow NFCORE_PPLACEEVAL {
+workflow PPLACEEVAL {
     PPLACEEVAL ()
 }
 
@@ -54,7 +52,7 @@ workflow NFCORE_PPLACEEVAL {
 // See: https://github.com/nf-core/rnaseq/issues/619
 //
 workflow {
-    NFCORE_PPLACEEVAL ()
+    PPLACEEVAL ()
 }
 
 /*
