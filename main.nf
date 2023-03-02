@@ -29,7 +29,7 @@ include { PPLACEEVAL } from './workflows/pplaceeval'
 //
 // WORKFLOW: Run main nf-core/pplaceeval analysis pipeline
 //
-workflow PPLACEEVAL {
+workflow NN_PPLACEEVAL {
     PPLACEEVAL ()
 }
 
@@ -44,7 +44,7 @@ workflow PPLACEEVAL {
 // See: https://github.com/nf-core/rnaseq/issues/619
 //
 workflow {
-    PPLACEEVAL ()
+    NN_PPLACEEVAL ()
 }
 
 /*
