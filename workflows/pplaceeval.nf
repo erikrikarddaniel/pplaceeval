@@ -14,8 +14,18 @@ WorkflowPplaceeval.initialise(params, log)
 def checkPathParamList = [ ]
 for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true) } }
 
-// TODO: We will need a reference phylogeny, alignment and classification as input. In addition, we need 
-// the number of iterations to run and the proportion of leaves/sequences to remove in each iteration.
+ch_pp_data = Channel.of([
+    meta: [ id: params.id ],
+    data: [
+        alignmethod:  params.alignmethod ? params.alignmethod    : 'hmmer',
+        queryseqfile: file(params.queryseqfile),
+        refseqfile:   file(params.refseqfile),
+        hmmfile:      params.hmmfile     ? file(params.hmmfile)  : [],
+        refphylogeny: file(params.refphylogeny),
+        model:        params.model,
+        taxonomy:     params.taxonomy    ? file(params.taxonomy) : []
+    ]
+])
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -51,6 +61,9 @@ include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/custom/dumpsoft
 workflow PPLACEEVAL {
 
     ch_versions = Channel.empty()
+
+    FASTA_NEWICK_EPANG_GAPPA ( ch_pp_data )
+    ch_versions = ch_versions.mix(FASTA_NEWICK_EPANG_GAPPA.out.versions)
 
     CUSTOM_DUMPSOFTWAREVERSIONS (
         ch_versions.unique{ it.text }.collectFile(name: 'collated_versions.yml')
