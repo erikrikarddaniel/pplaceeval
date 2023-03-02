@@ -11,11 +11,8 @@ WorkflowPplaceeval.initialise(params, log)
 
 // TODO nf-core: Add all file path parameters for the pipeline to the list below
 // Check input path parameters to see if they exist
-def checkPathParamList = [ params.input, params.multiqc_config, params.fasta ]
+def checkPathParamList = [ ]
 for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true) } }
-
-// Check mandatory parameters
-if (params.input) { ch_input = file(params.input) } else { exit 1, 'Input samplesheet not specified!' }
 
 // TODO: We will need a reference phylogeny, alignment and classification as input. In addition, we need 
 // the number of iterations to run and the proportion of leaves/sequences to remove in each iteration.
