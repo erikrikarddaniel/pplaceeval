@@ -62,23 +62,26 @@ workflow PPLACEEVAL {
     SUBSETTREE ( ch_subset )
     ch_versions = ch_versions.mix(SUBSETTREE.out.versions)
 
-ch_pp_data = Channel.of([
-    meta: [ id: params.id ],
-    data: [
-        alignmethod:  params.alignmethod ? params.alignmethod    : 'hmmer',
-        queryseqfile: file(params.queryseqfile),
-        refseqfile:   file(params.refseqfile),
-        hmmfile:      params.hmmfile     ? file(params.hmmfile)  : [],
-        refphylogeny: file(params.refphylogeny),
-        model:        params.model,
-        taxonomy:     params.taxonomy    ? file(params.taxonomy) : []
-    ]
-])
-    //FASTA_NEWICK_EPANG_GAPPA ( ch_pp_data )
-    //ch_versions = ch_versions.mix(FASTA_NEWICK_EPANG_GAPPA.out.versions)
+    SUBSETTREE.out.ssqfasta
+        .join(SUBSETTREE.out.ssrefalnfasta)
+        .join(SUBSETTREE.out.ssrefnewick)
+        .join(SUBSETTREE.out.sstaxonomy)
+        .map { [
+            meta: [ id: sprintf("%s-%05d", it[0].id, it[0].replicate) ],
+            data: [
+                alignmethod:  params.alignmethod ? params.alignmethod : 'hmmer',
+                queryseqfile: it[1],
+                refseqfile:   it[2],
+                refphylogeny: it[3],
+                taxonomy:     it[4],
+                model:        params.model
+            ]
+        ] }
+        .set { ch_ssplace }
 
     // 2. Place the test sequences in the corresponding reference phylogeny and evaluate
-    // Subworkflow, i.e. a collection of module calls.
+    FASTA_NEWICK_EPANG_GAPPA ( ch_ssplace )
+    ch_versions = ch_versions.mix(FASTA_NEWICK_EPANG_GAPPA.out.versions)
 
     // 3. Create hmm profiles from the subset reference alignment (realign), search test set with
     // the profiles and classify by taking the best hit. Evaluate.
