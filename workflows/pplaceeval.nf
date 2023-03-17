@@ -79,23 +79,7 @@ workflow PPLACEEVAL {
         ] }
         .set { ch_ssplace }
 
-/**
-ch_pp_data = Channel.of([
-    meta: [ id: params.id ],
-    data: [
-        alignmethod:  params.alignmethod ? params.alignmethod    : 'hmmer',
-        queryseqfile: file(params.queryseqfile),
-        refseqfile:   file(params.refseqfile),
-        hmmfile:      params.hmmfile     ? file(params.hmmfile)  : [],
-        refphylogeny: file(params.refphylogeny),
-        model:        params.model,
-        taxonomy:     params.taxonomy    ? file(params.taxonomy) : []
-    ]
-])
-**/
-
     // 2. Place the test sequences in the corresponding reference phylogeny and evaluate
-    //ch_ssplace.view()
     FASTA_NEWICK_EPANG_GAPPA ( ch_ssplace )
     ch_versions = ch_versions.mix(FASTA_NEWICK_EPANG_GAPPA.out.versions)
 
