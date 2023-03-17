@@ -72,6 +72,21 @@
                     "help_text": "The first column should consist of names of reference sequences, the second of taxonomy strings, e.g. 'Bacteria;Proteobacteria;Gammaproteobacteria;Enterobacterales;Enterobacteriaceae;Escherichia;Escherichia coli'.",
                     "fa_icon": "fas fa-file-tsv"
                 },
+                "n_replicates": {
+                    "type": "integer",
+                    "default": 10,
+                    "description": "Number of replicate classifications to make."
+                },
+                "seed": {
+                    "type": "integer",
+                    "default": 100,
+                    "description": "Random seed to use."
+                },
+                "proportion": {
+                    "type": "number",
+                    "default": 0.1,
+                    "description": "Proportion of leaves to extract in each iteration."
+                },
                 "outdir": {
                     "type": "string",
                     "format": "directory-path",
