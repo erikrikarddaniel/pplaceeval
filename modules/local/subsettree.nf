@@ -13,10 +13,11 @@ process SUBSETTREE {
     tuple val(meta), path(aln), path(phylo), path(taxonomy) // meta is assumed to contain .id (a name), .seed (random seed), proportion (proportion of labels to extract) and .replicate (a number)
 
     output:
-    tuple val(meta), path("${meta.id}.${sprintf('%05d', meta.replicate)}.ref.alnfasta")  , emit: ssrefalnfasta
-    tuple val(meta), path("${meta.id}.${sprintf('%05d', meta.replicate)}.query.fasta")   , emit: ssqfasta
-    tuple val(meta), path("${meta.id}.${sprintf('%05d', meta.replicate)}.ref.newick")    , emit: ssrefnewick
-    tuple val(meta), path("${meta.id}.${sprintf('%05d', meta.replicate)}.ref.tsv")       , emit: sstaxonomy
+    tuple val(meta), path("${meta.id}.${sprintf('%05d', meta.replicate)}.ref.alnfasta") , emit: ssrefalnfasta
+    tuple val(meta), path("${meta.id}.${sprintf('%05d', meta.replicate)}.query.fasta")  , emit: ssqfasta
+    tuple val(meta), path("${meta.id}.${sprintf('%05d', meta.replicate)}.ref.newick")   , emit: ssrefnewick
+    tuple val(meta), path("${meta.id}.${sprintf('%05d', meta.replicate)}.ref.tsv")      , emit: sstaxonomy
+    tuple val(meta), path("${meta.id}.${sprintf('%05d', meta.replicate)}.class.*.fasta"), emit: ssclassfasta
     path "versions.yml"           , emit: versions
 
     when:
@@ -33,12 +34,13 @@ process SUBSETTREE {
     suppressPackageStartupMessages(library(stringr))
     suppressPackageStartupMessages(library(readr))
     suppressPackageStartupMessages(library(dplyr))
+    suppressPackageStartupMessages(library(tidyr))
 
     set.seed($meta.seed + $meta.replicate)
 
     write_fasta <- function(d, f) {
         d %>%
-            transmute(s = sprintf(">%s\n%s", name, sequence)) %>%
+            transmute(s = sprintf(">%s\\n%s", name, sequence)) %>%
             write.table(f, col.names = FALSE, row.names = FALSE, quote = FALSE)
     }
 
@@ -62,7 +64,31 @@ process SUBSETTREE {
     write_fasta(ssaln, "${prefix}.ref.alnfasta")
     write_fasta(qseq, "${prefix}.query.fasta")
     write.tree(sstree, "${prefix}.ref.newick")
-    write.table(sstax, "${prefix}.ref.tsv", row.names = FALSE, col.names = FALSE, sep = '\t', quote = FALSE)
+    write.table(sstax, "${prefix}.ref.tsv", row.names = FALSE, col.names = FALSE, sep = '\\t', quote = FALSE)
+
+    # Write unaligned fasta files for classes
+    sstax   <- sstax %>% separate(class, c('l0', 'l1', 'l2', 'l3', 'l4'), sep = ';', fill = 'right')
+    levels  <- tibble(level = character(), name = character())
+    g <- function(tab, level) {
+        tab %>%
+            filter(!is.na(!!sym(level))) %>%
+            group_by(level = !!sym(level)) %>%
+            summarise(name = list(seqname)) %>%
+            mutate(level = level) %>%
+            unnest(name)
+    }
+    for ( l in c('l0', 'l1', 'l2', 'l3', 'l4') ) {
+        levels <- dplyr::union(levels, g(sstax, l))
+    }
+    seqsets <- levels %>%
+        inner_join(ssaln %>% mutate(sequence = str_remove_all(sequence, '-')), by = 'name')
+
+    for ( s in seqsets %>% distinct(level) %>% pull(level) ) {
+        write_fasta(
+            seqsets %>% filter(level == s) %>% select(name, sequence),
+            sprintf("${prefix}.class.%s.fasta", s)
+        )
+    }
 
     # Output versions.yml
     writeLines(
