@@ -14,19 +14,6 @@ WorkflowPplaceeval.initialise(params, log)
 def checkPathParamList = [ ]
 for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true) } }
 
-ch_pp_data = Channel.of([
-    meta: [ id: params.id ],
-    data: [
-        alignmethod:  params.alignmethod ? params.alignmethod    : 'hmmer',
-        queryseqfile: file(params.queryseqfile),
-        refseqfile:   file(params.refseqfile),
-        hmmfile:      params.hmmfile     ? file(params.hmmfile)  : [],
-        refphylogeny: file(params.refphylogeny),
-        model:        params.model,
-        taxonomy:     params.taxonomy    ? file(params.taxonomy) : []
-    ]
-])
-
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     CONFIG FILES
@@ -73,8 +60,20 @@ workflow PPLACEEVAL {
         .combine(Channel.fromPath(params.taxonomy))
         .set { ch_subset }
     SUBSETTREE ( ch_subset )
-    SUBSETTREE.out.ssqalnfasta.view()
     ch_versions = ch_versions.mix(SUBSETTREE.out.versions)
+
+ch_pp_data = Channel.of([
+    meta: [ id: params.id ],
+    data: [
+        alignmethod:  params.alignmethod ? params.alignmethod    : 'hmmer',
+        queryseqfile: file(params.queryseqfile),
+        refseqfile:   file(params.refseqfile),
+        hmmfile:      params.hmmfile     ? file(params.hmmfile)  : [],
+        refphylogeny: file(params.refphylogeny),
+        model:        params.model,
+        taxonomy:     params.taxonomy    ? file(params.taxonomy) : []
+    ]
+])
     //FASTA_NEWICK_EPANG_GAPPA ( ch_pp_data )
     //ch_versions = ch_versions.mix(FASTA_NEWICK_EPANG_GAPPA.out.versions)
 

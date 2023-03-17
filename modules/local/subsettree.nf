@@ -14,7 +14,7 @@ process SUBSETTREE {
 
     output:
     tuple val(meta), path("${meta.id}.${sprintf('%05d', meta.replicate)}.ref.alnfasta")  , emit: ssrefalnfasta
-    tuple val(meta), path("${meta.id}.${sprintf('%05d', meta.replicate)}.query.alnfasta"), emit: ssqalnfasta
+    tuple val(meta), path("${meta.id}.${sprintf('%05d', meta.replicate)}.query.fasta")   , emit: ssqfasta
     tuple val(meta), path("${meta.id}.${sprintf('%05d', meta.replicate)}.ref.newick")    , emit: ssrefnewick
     tuple val(meta), path("${meta.id}.${sprintf('%05d', meta.replicate)}.ref.tsv")       , emit: sstaxonomy
     path "versions.yml"           , emit: versions
@@ -29,12 +29,25 @@ process SUBSETTREE {
     #!/usr/bin/env Rscript
 
     suppressPackageStartupMessages(library(treeio))
+    suppressPackageStartupMessages(library(Biostrings))
+    suppressPackageStartupMessages(library(stringr))
     suppressPackageStartupMessages(library(readr))
     suppressPackageStartupMessages(library(dplyr))
 
     set.seed($meta.seed + $meta.replicate)
 
-    aln     <- read.fasta("$aln")
+    write_fasta <- function(d, f) {
+        d %>%
+            transmute(s = sprintf(">%s\n%s", name, sequence)) %>%
+            write.table(f, col.names = FALSE, row.names = FALSE, quote = FALSE)
+    }
+
+    aln     <- readAAMultipleAlignment("$aln") %>%
+        as('AAStringSet') %>%
+        data.frame() %>%
+        tibble::rownames_to_column('name')
+    colnames(aln) <- c('name', 'sequence')
+
     tree    <- read.newick("$phylo")
     tax     <- read_tsv("$taxonomy", col_names = c('seqname', 'class'), show_col_types = FALSE)
 
@@ -42,12 +55,12 @@ process SUBSETTREE {
     qlabels <- sample(labels, round(length(labels) * $meta.proportion))
 
     sstree  <- drop.tip(tree, qlabels)
-    ssaln   <- aln[sstree\$tip.label]
+    ssaln   <- aln %>% filter(name %in% sstree\$tip.label)
     sstax   <- tax %>% filter(! seqname %in% qlabels)
-    qaln    <- aln[qlabels]
+    qseq    <- aln %>% filter(name %in% qlabels) %>% mutate(sequence = str_remove_all(sequence, '-'))
 
-    ape::write.FASTA(ssaln, "${prefix}.ref.alnfasta")
-    ape::write.FASTA(qaln, "${prefix}.query.alnfasta")
+    write_fasta(ssaln, "${prefix}.ref.alnfasta")
+    write_fasta(qseq, "${prefix}.query.fasta")
     write.tree(sstree, "${prefix}.ref.newick")
     write.table(sstax, "${prefix}.ref.tsv", row.names = FALSE, col.names = FALSE, sep = '\t', quote = FALSE)
 
@@ -57,7 +70,7 @@ process SUBSETTREE {
             "\\"${task.process}\\":", 
             paste0("    R: ", paste0(R.Version()[c("major","minor")], collapse = ".")),
             paste0("    treeio: ", packageVersion("treeio")),
-            paste0("    ape: ", packageVersion("ape")),
+            paste0("    Biostrings: ", packageVersion("Biostrings")),
             paste0("    tidyverse: ", packageVersion("tidyverse")) 
         ), 
         "versions.yml"
