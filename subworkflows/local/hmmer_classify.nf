@@ -1,6 +1,7 @@
 include { MAFFT           } from '../../modules/nf-core/mafft/main'
 include { HMMER_HMMBUILD  } from '../../modules/nf-core/hmmer/hmmbuild/main'
 include { HMMER_HMMSEARCH } from '../../modules/nf-core/hmmer/hmmsearch/main'
+include { SUMMARISEHMMER  } from '../../modules/local/summarisehmmer'
 
 workflow HMMER_CLASSIFY {
 
@@ -30,7 +31,11 @@ workflow HMMER_CLASSIFY {
     HMMER_HMMSEARCH(ch_hmmsearch)
     ch_versions = ch_versions.mix(HMMER_HMMSEARCH.out.versions.first())
 
-    HMMER_HMMSEARCH.out.target_summary.groupTuple().view()
+    HMMER_HMMSEARCH.out.target_summary
+        .groupTuple()
+        .set { ch_summarise }
+
+    SUMMARISEHMMER(ch_summarise)
 
     emit:
     //bam      = SAMTOOLS_SORT.out.bam           // channel: [ val(meta), [ bam ] ]
