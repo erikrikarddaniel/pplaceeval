@@ -26,7 +26,8 @@ for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-include { SUBSETTREE } from '../modules/local/subsettree'
+include { SUBSETTREE     } from '../modules/local/subsettree'
+include { HMMER_CLASSIFY } from '../subworkflows/local/hmmer_classify'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -86,6 +87,19 @@ workflow PPLACEEVAL {
     // 3. Create hmm profiles from the subset reference alignment (realign), search test set with
     // the profiles and classify by taking the best hit. Evaluate.
     // Subworkflow, i.e. a collection of module calls.
+    SUBSETTREE.out.ssqfasta
+        .map { [
+            [ id: sprintf("%s-%05d", it[0].id, it[0].replicate) ],
+            it[1]
+        ] }
+        .set { ch_hmmer_classify_queries }
+    SUBSETTREE.out.ssclassfasta
+        .map { [
+            [ id: sprintf("%s-%05d", it[0].id, it[0].replicate) ],
+            it[1]
+        ] }
+        .set { ch_hmmer_classify_classes }
+    HMMER_CLASSIFY( ch_hmmer_classify_queries, ch_hmmer_classify_classes )
 
     // 4. Compare output from 2. and 3.
     // Subworkflow, i.e. a collection of module calls.
