@@ -29,6 +29,7 @@ for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true
 include { SUBSETTREE     } from '../modules/local/subsettree'
 include { HMMER_CLASSIFY } from '../subworkflows/local/hmmer_classify'
 include { SUBSET_SUMMARY } from '../modules/local/subset_summary'
+include { FINAL_SUMMARY  } from '../modules/local/final_summary'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -108,11 +109,18 @@ workflow PPLACEEVAL {
         .join(HMMER_CLASSIFY.out.hmmer_summary)
         .combine(Channel.fromPath(params.taxonomy))
         .map { [ it[0], it[3], it[1], it[2] ] }
-        .set { ch_final_summary }
-    ch_final_summary.view()
+        .set { ch_subset_summary }
 
-    SUBSET_SUMMARY(ch_final_summary)
+    SUBSET_SUMMARY(ch_subset_summary)
     ch_versions = ch_versions.mix(SUBSET_SUMMARY.out.versions)
+
+    SUBSET_SUMMARY.out.summary
+        .collect { it[1] }
+        .map { [ [ id: params.id ], it ] }
+        .set { ch_final_summary }
+
+    FINAL_SUMMARY(ch_final_summary)
+    ch_versions = ch_versions.mix(FINAL_SUMMARY.out.versions)
 
     CUSTOM_DUMPSOFTWAREVERSIONS (
         ch_versions.unique{ it.text }.collectFile(name: 'collated_versions.yml')

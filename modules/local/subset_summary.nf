@@ -8,8 +8,8 @@ process SUBSET_SUMMARY {
     tuple val(meta), path(true_clf), path(pplace_clf), path(hmmer_clf)
 
     output:
-    tuple val(meta), path("*.clfsum.tsv.gz"), emit: summary
-    path "versions.yml"           , emit: versions
+    tuple val(meta), path("*.subsetsum.tsv.gz"), emit: summary
+    path "versions.yml"                        , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -54,15 +54,12 @@ process SUBSET_SUMMARY {
         ) %>%
         mutate(subset = '${prefix}') %>%
         relocate(subset) %>%
-        write_tsv('${prefix}.clfsum.tsv.gz')
+        write_tsv('${prefix}.subsetsum.tsv.gz')
 
     # Output versions.yml
     writeLines(
         c(
             "\\"${task.process}\\":", 
-            paste0("    R: ", paste0(R.Version()[c("major","minor")], collapse = ".")),
-            paste0("    treeio: ", packageVersion("treeio")),
-            paste0("    Biostrings: ", packageVersion("Biostrings")),
             paste0("    tidyverse: ", packageVersion("tidyverse")) 
         ), 
         "versions.yml"
