@@ -36,10 +36,11 @@ workflow HMMER_CLASSIFY {
         .set { ch_summarise }
 
     SUMMARISEHMMER(ch_summarise)
+    ch_versions = ch_versions.mix(SUMMARISEHMMER.out.versions.first())
 
     emit:
-    //bam      = SAMTOOLS_SORT.out.bam           // channel: [ val(meta), [ bam ] ]
+    hmmer_summary = SUMMARISEHMMER.out.best_ranked
 
-    versions = ch_versions                     // channel: [ versions.yml ]
+    versions      = ch_versions                     // channel: [ versions.yml ]
 }
 
