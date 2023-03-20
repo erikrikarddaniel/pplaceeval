@@ -8,7 +8,7 @@ process SUMMARISEHMMER {
     tuple val(meta), path(tblouts)
 
     output:
-    tuple val(meta), path("*.tsv.gz"), emit: best_ranked
+    tuple val(meta), path("*.hmmclassify.tsv.gz"), emit: best_ranked
     path "versions.yml"              , emit: versions
 
     when:
@@ -43,9 +43,8 @@ process SUMMARISEHMMER {
         group_by(target) %>%
         arrange(desc(score), evalue, profile) %>%
         mutate(rank = row_number()) %>%
-        filter(rank == 1) %>%
         ungroup() %>%
-        write_tsv('${prefix}.tsv.gz')
+        write_tsv('${prefix}.hmmclassify.tsv.gz')
 
     # Output versions.yml
     writeLines(

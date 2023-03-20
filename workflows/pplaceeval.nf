@@ -28,6 +28,7 @@ for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true
 
 include { SUBSETTREE     } from '../modules/local/subsettree'
 include { HMMER_CLASSIFY } from '../subworkflows/local/hmmer_classify'
+include { SUBSET_SUMMARY } from '../modules/local/subset_summary'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -100,9 +101,18 @@ workflow PPLACEEVAL {
         ] }
         .set { ch_hmmer_classify_classes }
     HMMER_CLASSIFY( ch_hmmer_classify_queries, ch_hmmer_classify_classes )
+    ch_versions = ch_versions.mix(HMMER_CLASSIFY.out.versions)
 
     // 4. Compare output from 2. and 3.
-    // Subworkflow, i.e. a collection of module calls.
+    FASTA_NEWICK_EPANG_GAPPA.out.taxonomy_per_query
+        .join(HMMER_CLASSIFY.out.hmmer_summary)
+        .combine(Channel.fromPath(params.taxonomy))
+        .map { [ it[0], it[3], it[1], it[2] ] }
+        .set { ch_final_summary }
+    ch_final_summary.view()
+
+    SUBSET_SUMMARY(ch_final_summary)
+    ch_versions = ch_versions.mix(SUBSET_SUMMARY.out.versions)
 
     CUSTOM_DUMPSOFTWAREVERSIONS (
         ch_versions.unique{ it.text }.collectFile(name: 'collated_versions.yml')
