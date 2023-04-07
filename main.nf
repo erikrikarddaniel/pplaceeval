@@ -27,7 +27,7 @@ WorkflowMain.initialise(workflow, params, log)
 include { PPLACEEVAL } from './workflows/pplaceeval'
 
 //
-// WORKFLOW: Run main nf-core/pplaceeval analysis pipeline
+// WORKFLOW: Run main erikrikarddaniel/pplaceeval analysis pipeline
 //
 workflow NN_PPLACEEVAL {
     PPLACEEVAL ()
