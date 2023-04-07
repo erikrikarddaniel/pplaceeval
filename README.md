@@ -31,12 +31,12 @@ It uses Docker/Singularity containers making installation trivial and results hi
 4. Start running your own analysis!
 
    ```bash
-   nextflow run nf-core/pplaceeval --input samplesheet.csv --outdir <OUTDIR> -profile <docker/singularity>
+   nextflow run nf-core/pplaceeval --outdir <OUTDIR> --id <NAME> --refseqfile <NAME>.alnfaa --refphylogeny <NAME>.newick --taxonomy <NAME>.tax.tsv --model <MODEL> -profile <docker/singularity>
    ```
 
 ## Credits
 
-nf-core/pplaceeval was originally written by Daniel Lundin & Ghada Nouairia.
+pplaceeval was originally written by Daniel Lundin & Ghada Nouairia.
 
 ## Contributions and Support
 
