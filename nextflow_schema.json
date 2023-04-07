@@ -1,7 +1,7 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema",
-    "$id": "https://raw.githubusercontent.com/nf-core/pplaceeval/master/nextflow_schema.json",
-    "title": "nf-core/pplaceeval pipeline parameters",
+    "$id": "https://raw.githubusercontent.com/erikrikarddaniel/pplaceeval/master/nextflow_schema.json",
+    "title": "erikrikarddaniel/pplaceeval pipeline parameters",
     "description": "Evaluates phylogenetic placement versus classification with hierarchical hmm profiles",
     "type": "object",
     "definitions": {
@@ -10,17 +10,66 @@
             "type": "object",
             "fa_icon": "fas fa-terminal",
             "description": "Define where the pipeline should find input data and save output data.",
-            "required": ["input", "outdir"],
+            "required": ["outdir"],
             "properties": {
-                "input": {
+                "id": {
+                    "type": "string",
+                    "description": "Name of analysis",
+                    "default": "placement",
+                    "fa_icon": "fas fa-barcode"
+                },
+                "alignmethod": {
+                    "type": "string",
+                    "description": "Method used to align query sequences with.",
+                    "help_text": "Query sequences will be aligned to the reference alignment using either HMMER or MAFFT, except when an hmm profile is provided (--hmmfile; implies that --alignmethod is set to 'hmmer'), in which case both the reference and query sequences will be aligned with the profile (reference sequences must not be aligned, i.e. must not contain '-' characters).",
+                    "default": "hmmer",
+                    "fa_icon": "far fa-file-code",
+                    "enum": ["hmmer", "mafft"]
+                },
+                "refseqfile": {
                     "type": "string",
                     "format": "file-path",
-                    "mimetype": "text/csv",
-                    "pattern": "^\\S+\\.csv$",
-                    "schema": "assets/schema_input.json",
-                    "description": "Path to comma-separated file containing information about the samples in the experiment.",
-                    "help_text": "You will need to create a design file with information about the samples in your experiment before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 3 columns, and a header row. See [usage docs](https://nf-co.re/pplaceeval/usage#samplesheet-input).",
-                    "fa_icon": "fas fa-file-csv"
+                    "mimetype": "text/plain",
+                    "description": "File with reference sequences. Any format supported by HMMER tools.",
+                    "help_text": "If the sequences are not aligned, you need to provide an alignment option, e.g. --hmmfile.",
+                    "fa_icon": "far fa-file-code"
+                },
+                "refphylogeny": {
+                    "type": "string",
+                    "format": "file-path",
+                    "mimetype": "text/plain",
+                    "description": "Newick file with aligned reference sequences.",
+                    "default": "reference.newick",
+                    "fa_icon": "far fa-file-code"
+                },
+                "model": {
+                    "type": "string",
+                    "description": "Evolutionary model to use for placement, e.g. 'LG'.",
+                    "fa_icon": "fas fa-barcode"
+                },
+                "taxonomy": {
+                    "type": "string",
+                    "format": "file-path",
+                    "mimetype": "text/tab-separated-values",
+                    "pattern": "^\\S+\\.tsv$",
+                    "description": "Tab-separated file with taxonomy assignments of reference sequences.",
+                    "help_text": "The first column should consist of names of reference sequences, the second of taxonomy strings, e.g. 'Bacteria;Proteobacteria;Gammaproteobacteria;Enterobacterales;Enterobacteriaceae;Escherichia;Escherichia coli'.",
+                    "fa_icon": "fas fa-file-tsv"
+                },
+                "n_replicates": {
+                    "type": "integer",
+                    "default": 10,
+                    "description": "Number of replicate classifications to make."
+                },
+                "seed": {
+                    "type": "integer",
+                    "default": 100,
+                    "description": "Random seed to use."
+                },
+                "proportion": {
+                    "type": "number",
+                    "default": 0.1,
+                    "description": "Proportion of leaves to extract in each iteration."
                 },
                 "outdir": {
                     "type": "string",
@@ -39,44 +88,6 @@
                     "type": "string",
                     "description": "MultiQC report title. Printed as page header, used for filename if not otherwise specified.",
                     "fa_icon": "fas fa-file-signature"
-                }
-            }
-        },
-        "reference_genome_options": {
-            "title": "Reference genome options",
-            "type": "object",
-            "fa_icon": "fas fa-dna",
-            "description": "Reference genome related files and options required for the workflow.",
-            "properties": {
-                "genome": {
-                    "type": "string",
-                    "description": "Name of iGenomes reference.",
-                    "fa_icon": "fas fa-book",
-                    "help_text": "If using a reference genome configured in the pipeline using iGenomes, use this parameter to give the ID for the reference. This is then used to build the full paths for all required reference genome files e.g. `--genome GRCh38`. \n\nSee the [nf-core website docs](https://nf-co.re/usage/reference_genomes) for more details."
-                },
-                "fasta": {
-                    "type": "string",
-                    "format": "file-path",
-                    "mimetype": "text/plain",
-                    "pattern": "^\\S+\\.fn?a(sta)?(\\.gz)?$",
-                    "description": "Path to FASTA genome file.",
-                    "help_text": "This parameter is *mandatory* if `--genome` is not specified. If you don't have a BWA index available this will be generated for you automatically. Combine with `--save_reference` to save BWA index for future runs.",
-                    "fa_icon": "far fa-file-code"
-                },
-                "igenomes_base": {
-                    "type": "string",
-                    "format": "directory-path",
-                    "description": "Directory / URL base for iGenomes references.",
-                    "default": "s3://ngi-igenomes/igenomes",
-                    "fa_icon": "fas fa-cloud-download-alt",
-                    "hidden": true
-                },
-                "igenomes_ignore": {
-                    "type": "boolean",
-                    "description": "Do not load the iGenomes reference config.",
-                    "fa_icon": "fas fa-ban",
-                    "hidden": true,
-                    "help_text": "Do not load `igenomes.config` when running the pipeline. You may choose this option if you observe clashes between custom parameters and those supplied in `igenomes.config`."
                 }
             }
         },
@@ -276,9 +287,6 @@
     "allOf": [
         {
             "$ref": "#/definitions/input_output_options"
-        },
-        {
-            "$ref": "#/definitions/reference_genome_options"
         },
         {
             "$ref": "#/definitions/institutional_config_options"

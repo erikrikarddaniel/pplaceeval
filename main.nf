@@ -12,14 +12,6 @@ nextflow.enable.dsl = 2
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    GENOME PARAMETER VALUES
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-*/
-
-params.fasta = WorkflowMain.getGenomeAttribute(params, 'fasta')
-
-/*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     VALIDATE & PRINT PARAMETER SUMMARY
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
@@ -35,9 +27,9 @@ WorkflowMain.initialise(workflow, params, log)
 include { PPLACEEVAL } from './workflows/pplaceeval'
 
 //
-// WORKFLOW: Run main nf-core/pplaceeval analysis pipeline
+// WORKFLOW: Run main erikrikarddaniel/pplaceeval analysis pipeline
 //
-workflow PPLACEEVAL {
+workflow NN_PPLACEEVAL {
     PPLACEEVAL ()
 }
 
@@ -52,7 +44,7 @@ workflow PPLACEEVAL {
 // See: https://github.com/nf-core/rnaseq/issues/619
 //
 workflow {
-    PPLACEEVAL ()
+    NN_PPLACEEVAL ()
 }
 
 /*

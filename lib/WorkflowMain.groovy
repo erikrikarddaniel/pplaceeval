@@ -9,7 +9,6 @@ class WorkflowMain {
     //
     public static String citation(workflow) {
         return "If you use ${workflow.manifest.name} for your analysis please cite:\n\n" +
-            // TODO nf-core: Add Zenodo DOI for pipeline after first release
             //"* The pipeline\n" +
             //"  https://doi.org/10.5281/zenodo.XXXXXXX\n\n" +
             "* The nf-core framework\n" +
@@ -78,12 +77,6 @@ class WorkflowMain {
 
         // Check AWS batch settings
         NfcoreTemplate.awsBatch(workflow, params)
-
-        // Check input has been provided
-        if (!params.input) {
-            log.error "Please provide an input samplesheet to the pipeline e.g. '--input samplesheet.csv'"
-            System.exit(1)
-        }
     }
     //
     // Get attribute from genome config file e.g. fasta
